@@ -1,0 +1,68 @@
+#!/bin/bash
+
+display_help() {
+    echo "Usage: $0 [option] package_name"
+    echo
+    echo "Options:"
+    echo "  -S package_name    Install AUR package"
+    echo "  -Ss package_name   Search for AUR package"
+    echo "  -H                 Show this screen"
+    echo "  This tool was created by me as an alternative"
+    echo "  To using the AUR directory in pacman so you can"
+    echo "  Install pacman and AUR software at the same time."
+    echo "  Please report any bugs on the github!"
+    exit 1
+}
+
+if [ "$#" -ne 2 ]; then
+    display_help
+fi
+
+OPTION=$1
+PACKAGE_NAME=$2
+
+case $OPTION in
+    -S)
+        git clone "https://aur.archlinux.org/$PACKAGE_NAME.git" || {
+            echo "Failed to clone repository for $PACKAGE_NAME"
+            exit 1
+        }
+
+        cd "$PACKAGE_NAME" || exit
+        makepkg -si --noconfirm
+
+        if [ $? -eq 0 ]; then
+            echo "$PACKAGE_NAME has been successfully installed."
+        else
+            echo "Failed to install $PACKAGE_NAME."
+            exit 1
+        fi
+
+        cd ..
+        rm -rf "$PACKAGE_NAME"
+        echo "Cleaned up the installation files."
+        ;;
+
+    -Ss)
+        RESULTS=$(curl -s "https://aur.archlinux.org/rpc?v=5&type=search&arg=$PACKAGE_NAME")
+
+        if [ $(echo "$RESULTS" | jq '.resultcount') -eq 0 ]; then
+            echo "No packages found for '$PACKAGE_NAME'."
+            exit 1
+        fi
+
+        echo "$RESULTS" | jq -r '.results[] | "\(.Name): \(.Description)"' |
+        while read -r line; do
+            DESCRIPTION=$(echo "$line" | sed -E 's/(.*?[.!?]).*/\1/')
+            echo "$DESCRIPTION"
+        done
+        ;;
+
+    -H)
+        display_help
+        ;;
+
+    *)
+        display_help
+        ;;
+esac
