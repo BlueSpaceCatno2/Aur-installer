@@ -8,8 +8,8 @@ display_help() {
     echo "  -Ss package_name   Search for AUR package"
     echo "  -H                 Show this screen"
     echo "  This tool was created by me as an alternative"
-    echo "  To using the AUR directory in pacman so you can"
-    echo "  Install pacman and AUR software at the same time."
+    echo "  To manually installing AUR programs"
+    echo "  To automate AUR installations."
     echo "  Please report any bugs on the github!"
     exit 1
 }
